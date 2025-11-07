@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Educent İdarə Sistemi</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #eaf0ff;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+  h2 {
+    background: #0047ab;
+    color: white;
+    margin: 0;
+    padding: 15px;
+  }
+  .container {
+    margin-top: 30px;
+  }
+  input, button {
+    margin: 10px;
+    padding: 10px;
+    width: 250px;
+    border-radius: 5px;
+    border: 1px solid #0047ab;
+  }
+  button {
+    background: #0047ab;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #003080;
+  }
+  .panel {
+    display: none;
+    background: white;
+    margin: 20px auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 450px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  }
+  .result {
+    margin-top: 20px;
+  }
+  .error {
+    color: red;
+  }
+</style>
+</head>
+<body>
+
+<h2>Educent İdarə Sistemi</h2>
+
+<div class="container" id="loginPanel">
+  <p>Kodunuzu daxil edin:</p>
+  <input type="password" id="loginCode" placeholder="Məs: 4083 və ya 43120">
+  <button onclick="login()">Daxil ol</button>
+  <p id="loginStatus" class="error"></p>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="panel">
+  <h3>Admin Panel</h3>
+  <input type="text" id="id" placeholder="ID (məs: 43120)">
+  <input type="text" id="ad" placeholder="Ad">
+  <input type="text" id="soyad" placeholder="Soyad">
+  <input type="text" id="sinif" placeholder="Sinif">
+  <input type="text" id="fenn" placeholder="Fənn">
+  <input type="text" id="qrup" placeholder="Qrup">
+  <input type="text" id="bal" placeholder="Bal">
+  <button onclick="addData()">Əlavə et</button>
+  <p id="status"></p>
+  <button onclick="logout()">Çıxış</button>
+</div>
+
+<!-- İmtahan Nəticəsi Panel -->
+<div id="studentPanel" class="panel">
+  <h3>İmtahan Nəticələri</h3>
+  <p>İmtahan ID nömrənizi daxil edin:</p>
+  <input type="text" id="searchId" placeholder="Məsələn: 43120">
+  <button onclick="searchResult()">Axtar</button>
+  <div id="result" class="result"></div>
+  <button onclick="logout()">Çıxış</button>
+</div>
+
+<script>
+function login() {
+  const code = document.getElementById("loginCode").value.trim();
+  const loginStatus = document.getElementById("loginStatus");
+  const adminPanel = document.getElementById("adminPanel");
+  const studentPanel = document.getElementById("studentPanel");
+  const loginPanel = document.getElementById("loginPanel");
+
+  if (!code) {
+    loginStatus.textContent = "Zəhmət olmasa kodu daxil edin.";
+    return;
+  }
+
+  // Admin kodu
+  if (code === "4083") {
+    loginPanel.style.display = "none";
+    adminPanel.style.display = "block";
+    loginStatus.textContent = "";
+    return;
+  }
+
+  // Şagird paneli
+  loginPanel.style.display = "none";
+  studentPanel.style.display = "block";
+  document.getElementById("searchId").value = code;
+  searchResult();
+}
+
+function logout() {
+  document.getElementById("loginPanel").style.display = "block";
+  document.getElementById("adminPanel").style.display = "none";
+  document.getElementById("studentPanel").style.display = "none";
+  document.getElementById("loginCode").value = "";
+}
+
+// Admin məlumat əlavə edir
+function addData() {
+  const id = document.getElementById("id").value.trim();
+  const ad = document.getElementById("ad").value.trim();
+  const soyad = document.getElementById("soyad").value.trim();
+  const sinif = document.getElementById("sinif").value.trim();
+  const fenn = document.getElementById("fenn").value.trim();
+  const qrup = document.getElementById("qrup").value.trim();
+  const bal = document.getElementById("bal").value.trim();
+  const status = document.getElementById("status");
+
+  if (!id || !ad || !soyad) {
+    status.textContent = "Zəhmət olmasa bütün xanaları doldurun.";
+    return;
+  }
+
+  const newEntry = { id, ad, soyad, sinif, fenn, qrup, bal };
+  const data = JSON.parse(localStorage.getItem("examData")) || [];
+  data.push(newEntry);
+  localStorage.setItem("examData", JSON.stringify(data));
+
+  status.textContent = "Məlumat əlavə olundu ✅";
+
+  document.getElementById("id").value = "";
+  document.getElementById("ad").value = "";
+  document.getElementById("soyad").value = "";
+  document.getElementById("sinif").value = "";
+  document.getElementById("fenn").value = "";
+  document.getElementById("qrup").value = "";
+  document.getElementById("bal").value = "";
+}
+
+// Şagird ID ilə nəticəsini axtarır
+function searchResult() {
+  const id = document.getElementById("searchId").value.trim();
+  const resultDiv = document.getElementById("result");
+
+  if (!id) {
+    resultDiv.innerHTML = "<p class='error'>ID nömrəsini daxil edin.</p>";
+    return;
+  }
+
+  const data = JSON.parse(localStorage.getItem("examData")) || [];
+  const found = data.find(item => item.id === id);
+
+  if (found) {
+    resultDiv.innerHTML = `
+      <h3>${found.ad} ${found.soyad}</h3>
+      <p><b>Sinif:</b> ${found.sinif}</p>
+      <p><b>Fənn:</b> ${found.fenn}</p>
+      <p><b>Qrup:</b> ${found.qrup}</p>
+      <p><b>Bal:</b> ${found.bal}</p>
+    `;
+  } else {
+    resultDiv.innerHTML = "<p class='error'>Bu ID nömrəsinə uyğun nəticə tapılmadı.</p>";
+  }
+}
+</script>
+</body>
+</html>
